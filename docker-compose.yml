@@ -12,6 +12,11 @@ services:
       - "5432:5432"
     networks:
       - postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U alibou"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
   pgadmin:
     container_name: pgadmin
@@ -34,6 +39,139 @@ services:
       - "9411:9411"
     networks:
       - zipkin
+
+  config-server:
+    container_name: my-demo-config-server
+    build:
+      context: .
+      dockerfile: Dockerfile.microservice
+      args:
+        SERVICE_NAME: "config-server"
+    ports:
+      - "8888:8888"
+    networks:
+      - zipkin
+      - postgres
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  discovery:
+    container_name: my-demo-discovery
+    build:
+      context: .
+      dockerfile: Dockerfile.microservice
+      args:
+        SERVICE_NAME: "discovery"
+    ports:
+      - "8761:8761"
+    networks:
+      - zipkin
+      - postgres
+    environment:
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      - EUREKA_INSTANCE_HOSTNAME=discovery
+    depends_on:
+      config-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  gateway:
+    container_name: my-demo-gateway
+    build:
+      context: .
+      dockerfile: Dockerfile.microservice
+      args:
+        SERVICE_NAME: "gateway"
+    ports:
+      - "8222:8222"
+    networks:
+      - zipkin
+      - postgres
+    environment:
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      - EUREKA_INSTANCE_HOSTNAME=gateway
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery:8761/eureka
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
+      - SPRING_CLOUD_GATEWAY_ROUTES_0_ID=students
+      - SPRING_CLOUD_GATEWAY_ROUTES_0_URI=http://students:8090
+      - SPRING_CLOUD_GATEWAY_ROUTES_0_PREDICATES_0=Path=/api/v1/students/**
+      - SPRING_CLOUD_GATEWAY_ROUTES_1_ID=schools
+      - SPRING_CLOUD_GATEWAY_ROUTES_1_URI=http://schools:8070
+      - SPRING_CLOUD_GATEWAY_ROUTES_1_PREDICATES_0=Path=/api/v1/schools/**
+    depends_on:
+      config-server:
+        condition: service_healthy
+      discovery:
+        condition: service_healthy
+    restart: unless-stopped
+
+  schools:
+    container_name: my-demo-schools
+    build:
+      context: .
+      dockerfile: Dockerfile.microservice
+      args:
+        SERVICE_NAME: "school"
+    ports:
+      - "8070:8070"
+    networks:
+      - zipkin
+      - postgres
+    environment:
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      - EUREKA_INSTANCE_HOSTNAME=schools
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery:8761/eureka
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgresql:5432/alibou
+      - SPRING_DATASOURCE_USERNAME=alibou
+      - SPRING_DATASOURCE_PASSWORD=alibou
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
+      - APPLICATION_CONFIG_STUDENTS_URL=http://gateway:8222/api/v1/students
+    depends_on:
+      config-server:
+        condition: service_healthy
+      discovery:
+        condition: service_healthy
+      postgresql:
+        condition: service_healthy
+    restart: unless-stopped
+
+  students:
+    container_name: my-demo-students
+    build:
+      context: .
+      dockerfile: Dockerfile.microservice
+      args:
+        SERVICE_NAME: "student"
+    ports:
+      - "8090:8090"
+    networks:
+      - zipkin
+      - postgres
+    environment:
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      - EUREKA_INSTANCE_HOSTNAME=students
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery:8761/eureka
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgresql:5432/alibou
+      - SPRING_DATASOURCE_USERNAME=alibou
+      - SPRING_DATASOURCE_PASSWORD=alibou
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
+    depends_on:
+      config-server:
+        condition: service_healthy
+      discovery:
+        condition: service_healthy
+      postgresql:
+        condition: service_healthy
+    restart: unless-stopped
 
 networks:
   postgres:

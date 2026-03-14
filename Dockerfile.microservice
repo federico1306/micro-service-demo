@@ -1,0 +1,26 @@
+FROM maven:3.9.6-eclipse-temurin-17 AS builder
+WORKDIR /build
+
+ARG SERVICE_NAME
+
+# Copy the local 'cputracing' library and install it into the builder's local maven repo
+# This avoids needing to have it on Maven Central!
+COPY libs/cputracing-1.0.jar /build/cputracing-1.0.jar
+RUN mvn install:install-file -Dfile=/build/cputracing-1.0.jar -DgroupId=it.univaq -DartifactId=cputracing -Dversion=1.0 -Dpackaging=jar
+
+# Copy the pom.xml of the specific microservice
+COPY ${SERVICE_NAME}/pom.xml /build/
+
+# Download dependencies explicitly so they can be cached by Docker if pom doesn't change
+RUN mvn dependency:go-offline -DskipTests -B -q || true
+
+COPY ${SERVICE_NAME}/src /build/src
+
+# Package the application
+RUN mvn clean package -DskipTests -B -T 1C
+
+# Run stage
+FROM eclipse-temurin:17-jre
+WORKDIR /app
+COPY --from=builder /build/target/*.jar app.jar
+ENTRYPOINT ["java", "-jar", "app.jar"]
