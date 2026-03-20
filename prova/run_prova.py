@@ -5,19 +5,24 @@ import os
 from datetime import datetime
 
 # ================================================================
-# CONFIGURAZIONE CAMPAGNA DI TEST
+# CONFIGURAZIONE CAMPAGNA DI PROVA (1 test per blocco)
 # ================================================================
 
 BLOCCHI_UTENTI      = [10, 25, 50]   # N. thread JMeter per ogni blocco
-N_TEST_PER_BLOCCO   = 10             # Ripetizioni per blocco
+N_TEST_PER_BLOCCO   = 1              # Un solo test per blocco (modalità prova)
 DURATA_TEST_SECONDI = 300            # Durata di ogni test (5 minuti)
-PAUSA_TRA_TEST_S    = 60             # Pausa tra un test e il successivo (1 min)
-PAUSA_TRA_BLOCCHI_S = 300            # Pausa tra un blocco e il successivo (5 min)
+PAUSA_TRA_BLOCCHI_S = 10            # Pausa tra un blocco e il successivo (5 min)
 
 JMETER_BIN = r"C:\apache-jmeter-5.6.3\bin\jmeter.bat"
-FILE_JMX   = os.path.join(os.path.dirname(os.path.abspath(__file__)), "stress_test_auto.jmx")
+FILE_JMX   = (
+    r"C:\Users\berar\Documents\micro-service-demo"
+    r"\stress_test_auto.jmx"
+)
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+# Script Python nella cartella padre (micro-service-demo/)
+SCRIPT_DIR  = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Output nella cartella corrente (prova/)
+PROVA_DIR   = os.path.dirname(os.path.abspath(__file__))
 
 
 # ================================================================
@@ -25,6 +30,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 # ================================================================
 
 def conto_alla_rovescia(secondi, messaggio):
+    """Attende 'secondi' mostrando il conto alla rovescia ogni secondo."""
     print(f"\n  {messaggio}")
     for i in range(secondi, 0, -1):
         print(f"\r  Ripresa tra {i:3d} s...", end="", flush=True)
@@ -41,7 +47,7 @@ def esegui_singolo_test(n_utenti, durata_s, output_dir):
     lookback_ms      = (durata_s + 30) * 1000
     risultati_jmeter = os.path.join(output_dir, "risultati_jmeter.csv")
 
-    # 1. Logger hardware
+    # ---- 1. Logger hardware ----
     print(f"    [1/5] Avvio Logger Hardware...")
     logger_process = subprocess.Popen(
         [sys.executable, os.path.join(SCRIPT_DIR, "mio_logger.py")],
@@ -53,7 +59,7 @@ def esegui_singolo_test(n_utenti, durata_s, output_dir):
     print("    Calibrazione 10s a riposo...")
     time.sleep(10)
 
-    # 2. JMeter
+    # ---- 2. JMeter ----
     print(f"    [2/5] JMeter: {n_utenti} utenti × {durata_s}s...")
     if os.path.exists(risultati_jmeter):
         os.remove(risultati_jmeter)
@@ -80,12 +86,12 @@ def esegui_singolo_test(n_utenti, durata_s, output_dir):
         logger_process.terminate()
         return False
 
-    # 3. Ferma logger
+    # ---- 3. Ferma il logger ----
     print("    [3/5] Fermo Logger Hardware...")
     logger_process.terminate()
     logger_process.wait()
 
-    # 4. Fetch tracce Zipkin
+    # ---- 4. Fetch tracce Zipkin ----
     print(f"    [4/5] Scarico tracce Zipkin (lookback={lookback_ms}ms)...")
     time.sleep(2)
     subprocess.run(
@@ -93,7 +99,7 @@ def esegui_singolo_test(n_utenti, durata_s, output_dir):
         cwd=output_dir,
     )
 
-    # 5. Calcola energia
+    # ---- 5. Calcola energia ----
     print("    [5/5] Calcolo energia (CPU Nanos)...")
     subprocess.run(
         [sys.executable, os.path.join(SCRIPT_DIR, "energy_injector.py")],
@@ -113,18 +119,15 @@ def main():
     n_totale_test  = n_blocchi * N_TEST_PER_BLOCCO
 
     print("=" * 65)
-    print("  CAMPAGNA DI TEST AUTOMATIZZATA — MICRO-SERVICE-DEMO")
+    print("  CAMPAGNA DI PROVA — MICRO-SERVICE-DEMO")
     print(f"  Avvio: {inizio_globale.strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 65)
-    print(f"  Applicazione     : School/Student (Gateway :8222)")
     print(f"  Blocchi utenti   : {BLOCCHI_UTENTI}")
-    print(f"  Test per blocco  : {N_TEST_PER_BLOCCO}")
+    print(f"  Test per blocco  : {N_TEST_PER_BLOCCO} (modalità prova)")
     print(f"  Durata test      : {DURATA_TEST_SECONDI}s ({DURATA_TEST_SECONDI // 60} min)")
-    print(f"  Pausa tra test   : {PAUSA_TRA_TEST_S}s")
     print(f"  Pausa tra blocchi: {PAUSA_TRA_BLOCCHI_S}s ({PAUSA_TRA_BLOCCHI_S // 60} min)")
     print(f"  Totale test      : {n_totale_test}")
-    print(f"  JMX              : {FILE_JMX}")
-    print(f"  Output           : risultati/blocco_X_Yutenti/test_ZZ/")
+    print(f"  Output           : prova/risultati/blocco_X_Yutenti/test_01/")
     print("=" * 65)
 
     risultati = []
@@ -135,42 +138,37 @@ def main():
         print(f"{'#' * 65}")
 
         nome_blocco = f"blocco_{idx_blocco}_{n_utenti}utenti"
+        output_dir  = os.path.join(PROVA_DIR, "risultati", nome_blocco, "test_01")
 
-        for idx_test in range(1, N_TEST_PER_BLOCCO + 1):
-            output_dir = os.path.join(
-                SCRIPT_DIR, "risultati", nome_blocco, f"test_{idx_test:02d}"
-            )
+        print(f"\n  --- TEST UNICO (Blocco {idx_blocco}/{n_blocchi}, {n_utenti} utenti) ---")
+        print(f"  Output: {output_dir}")
 
-            print(f"\n  --- TEST {idx_test}/{N_TEST_PER_BLOCCO} "
-                  f"(Blocco {idx_blocco}/{n_blocchi}, {n_utenti} utenti) ---")
-            print(f"  Output: {output_dir}")
+        inizio_test  = datetime.now()
+        ok           = esegui_singolo_test(n_utenti, DURATA_TEST_SECONDI, output_dir)
+        durata_reale = (datetime.now() - inizio_test).total_seconds()
 
-            inizio_test = datetime.now()
-            ok = esegui_singolo_test(n_utenti, DURATA_TEST_SECONDI, output_dir)
-            durata_reale = (datetime.now() - inizio_test).total_seconds()
+        stato = "OK" if ok else "ERRORE"
+        risultati.append({
+            "blocco": idx_blocco, "utenti": n_utenti, "stato": stato,
+        })
+        print(f"  Test completato in {durata_reale:.0f}s — {stato}")
 
-            stato = "OK" if ok else "ERRORE"
-            risultati.append({
-                "blocco": idx_blocco, "utenti": n_utenti,
-                "test": idx_test, "stato": stato,
-            })
-            print(f"  Test completato in {durata_reale:.0f}s — {stato}")
-
-            if idx_test < N_TEST_PER_BLOCCO:
-                conto_alla_rovescia(PAUSA_TRA_TEST_S, f"Pausa tra test ({PAUSA_TRA_TEST_S}s)...")
-
+        # Pausa tra blocchi (non dopo l'ultimo)
         if idx_blocco < n_blocchi:
             conto_alla_rovescia(
                 PAUSA_TRA_BLOCCHI_S,
                 f"Pausa tra blocchi ({PAUSA_TRA_BLOCCHI_S // 60} min) — sistema in raffreddamento...",
             )
 
+    # ----------------------------------------------------------------
+    # Report finale
+    # ----------------------------------------------------------------
     durata_totale = datetime.now() - inizio_globale
     test_ok  = sum(1 for r in risultati if r["stato"] == "OK")
     test_err = sum(1 for r in risultati if r["stato"] == "ERRORE")
 
     print(f"\n{'=' * 65}")
-    print("  CAMPAGNA COMPLETATA!")
+    print("  PROVA COMPLETATA!")
     print(f"  Durata totale: {durata_totale}")
     print(f"\n  RIEPILOGO:")
     print(f"  Successi : {test_ok}/{len(risultati)}")
@@ -178,8 +176,8 @@ def main():
         print(f"  Errori   : {test_err}/{len(risultati)}")
         for r in risultati:
             if r["stato"] == "ERRORE":
-                print(f"    - Blocco {r['blocco']} ({r['utenti']} utenti), test {r['test']:02d}")
-    print(f"\n  Risultati in: {os.path.join(SCRIPT_DIR, 'risultati')}/")
+                print(f"    - Blocco {r['blocco']} ({r['utenti']} utenti)")
+    print(f"\n  Risultati in: {os.path.join(PROVA_DIR, 'risultati')}/")
     print("=" * 65)
 
 

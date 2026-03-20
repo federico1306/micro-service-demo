@@ -1,1 +1,258 @@
-.idea
+# ============================================================================
+# MICRO-SERVICE-DEMO - GITIGNORE
+# ============================================================================
+# Esclude i risultati dei test ma mantiene gli script per la riproducibilità
+
+# ============================================================================
+# RISULTATI TEST ENERGETICI
+# ============================================================================
+
+# Cartelle risultati test
+TEST/risultati/
+prova/risultati/
+*/risultati/
+
+# File output test energetici
+LibreHardwareMonitorLog-Custom.csv
+dataset_tesi.json
+dataset_con_energia.json
+dataset_con_energia_LIGHT.json
+risultati_jmeter.csv
+
+# Grafici generati dall'analisi
+grafici_campagna/
+*.png
+!diagram.png  # Mantieni il diagramma architettura
+
+# File temporanei di test
+jmeter.log
+jmeter_*.log
+
+# ============================================================================
+# PYTHON
+# ============================================================================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# ============================================================================
+# JAVA / MAVEN
+# ============================================================================
+
+# Compiled class file
+*.class
+
+# Log file
+*.log
+
+# BlueJ files
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# ============================================================================
+# DOCKER
+# ============================================================================
+
+# Docker volumes e dati persistenti
+docker-data/
+postgres-data/
+
+# ============================================================================
+# IDE
+# ============================================================================
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Eclipse
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+# VS Code
+.vscode/
+
+# ============================================================================
+# SISTEMA OPERATIVO
+# ============================================================================
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ============================================================================
+# ALTRO
+# ============================================================================
+
+# Backup files
+*.bak
+*.backup
+*.tmp
+*.temp
+
+# Logs generici
+*.log.*
+logs/
+
+# File temporanei editor
+*.swp
+*.swo
+*~
+
+# ============================================================================
+# NOTE IMPORTANTI
+# ============================================================================
+#
+# COSA VIENE TRACCIATO (incluso nel git):
+# ✓ Tutti gli script Python (.py)
+# ✓ File JMX per JMeter
+# ✓ README.md e documentazione
+# ✓ docker-compose.yml
+# ✓ Codice sorgente microservizi
+# ✓ Configurazioni Spring
+# ✓ File di licenza
+#
+# COSA VIENE IGNORATO (escluso dal git):
+# ✗ Cartelle risultati/ dei test
+# ✗ File CSV di misurazioni hardware
+# ✗ File JSON delle tracce Zipkin
+# ✗ File CSV risultati JMeter
+# ✗ Grafici PNG generati
+# ✗ File temporanei e cache
+#
+# Per includere specifici file ignorati usa: git add -f filename
+#

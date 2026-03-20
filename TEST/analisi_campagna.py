@@ -9,11 +9,11 @@ from pathlib import Path
 # CONFIGURAZIONE
 # ================================================================
 
-SCRIPT_DIR    = Path(__file__).parent
+SCRIPT_DIR   = Path(__file__).parent
 RISULTATI_DIR = SCRIPT_DIR / "risultati"
-OUTPUT_DIR    = SCRIPT_DIR / "grafici_campagna"
+OUTPUT_DIR   = SCRIPT_DIR / "grafici_campagna"
 
-COLORI = ["#2196F3", "#FF9800", "#4CAF50"]
+COLORI = ["#2196F3", "#FF9800", "#4CAF50"]   # blu, arancione, verde (un colore per blocco)
 
 
 # ================================================================
@@ -21,6 +21,13 @@ COLORI = ["#2196F3", "#FF9800", "#4CAF50"]
 # ================================================================
 
 def leggi_metriche_test(test_dir):
+    """
+    Legge dataset_con_energia.json da una singola cartella test e restituisce:
+      - energia_totale_j : somma di tutti energy.joules degli span
+      - costo_per_nano   : J / nanosecondo di CPU
+      - span_data        : lista di (durata_ms, energia_j) per scatter plot
+    Ritorna None se il file non esiste o è vuoto.
+    """
     json_path = test_dir / "dataset_con_energia.json"
     if not json_path.exists():
         return None
@@ -34,6 +41,7 @@ def leggi_metriche_test(test_dir):
 
     for span in spans:
         tags = span.get("tags", {})
+
         energy_j = float(tags.get("energy.joules", 0))
         energia_totale += energy_j
 
@@ -42,7 +50,7 @@ def leggi_metriche_test(test_dir):
 
         duration_us = span.get("duration", 0)
         if energy_j > 0 and duration_us > 0:
-            span_data.append((duration_us / 1000.0, energy_j))
+            span_data.append((duration_us / 1000.0, energy_j))   # µs → ms
 
     if energia_totale == 0:
         return None
@@ -57,6 +65,10 @@ def leggi_metriche_test(test_dir):
 
 
 def carica_tutti_dati():
+    """
+    Scansiona risultati/blocco_X_Yutenti/test_ZZ/ e restituisce lista di:
+      { n_utenti, nome, metriche: [{ energia_totale_j, costo_per_nano, span_data }] }
+    """
     if not RISULTATI_DIR.exists():
         print(f"[!] Cartella risultati non trovata: {RISULTATI_DIR}")
         return []
@@ -65,6 +77,8 @@ def carica_tutti_dati():
     for blocco_dir in sorted(RISULTATI_DIR.iterdir()):
         if not blocco_dir.is_dir() or not blocco_dir.name.startswith("blocco_"):
             continue
+
+        # Es. "blocco_1_10utenti" → 10
         try:
             n_utenti = int(blocco_dir.name.split("_")[-1].replace("utenti", ""))
         except (ValueError, IndexError):
@@ -90,6 +104,7 @@ def carica_tutti_dati():
 # ================================================================
 
 def grafico_boxplot_energia(blocchi, ax):
+    """Box plot distribuzione energia netta per blocco (10 valori per box)."""
     dati      = [[m["energia_totale_j"] for m in b["metriche"]] for b in blocchi]
     etichette = [f"{b['n_utenti']} utenti" for b in blocchi]
 
@@ -109,6 +124,7 @@ def grafico_boxplot_energia(blocchi, ax):
 
 
 def grafico_trend_energia(blocchi, ax):
+    """Curva energia media ± deviazione standard al crescere del carico."""
     utenti = [b["n_utenti"] for b in blocchi]
     medie  = [np.mean([m["energia_totale_j"] for m in b["metriche"]]) for b in blocchi]
     stds   = [np.std( [m["energia_totale_j"] for m in b["metriche"]]) for b in blocchi]
@@ -117,6 +133,7 @@ def grafico_trend_energia(blocchi, ax):
                 fmt="-o", color="#1976D2", linewidth=2,
                 markersize=8, capsize=6, capthick=2, elinewidth=1.5,
                 label="Media ± σ")
+
     for u, m in zip(utenti, medie):
         ax.annotate(f"{m:.1f} J", (u, m),
                     textcoords="offset points", xytext=(0, 12),
@@ -131,6 +148,7 @@ def grafico_trend_energia(blocchi, ax):
 
 
 def grafico_costo_nano(blocchi, ax):
+    """Box plot del costo energetico J/nanosecondo per blocco."""
     dati      = [[m["costo_per_nano"] for m in b["metriche"] if m["costo_per_nano"] > 0]
                  for b in blocchi]
     etichette = [f"{b['n_utenti']} utenti" for b in blocchi]
@@ -152,11 +170,14 @@ def grafico_costo_nano(blocchi, ax):
 
 
 def grafico_scatter_correlazione(blocchi, ax):
+    """Scatter latenza–energia aggregato, colorato per blocco, con regressione."""
     patches = []
+
     for blocco, colore in zip(blocchi, COLORI):
         tutti_span = []
         for m in blocco["metriche"]:
             tutti_span.extend(m["span_data"])
+
         if not tutti_span:
             continue
 
@@ -165,7 +186,7 @@ def grafico_scatter_correlazione(blocchi, ax):
 
         ax.scatter(durate, energie, alpha=0.25, color=colore, s=12, edgecolors="none")
 
-        z     = np.polyfit(durate, energie, 1)
+        z = np.polyfit(durate, energie, 1)
         x_rng = np.linspace(min(durate), max(durate), 200)
         ax.plot(x_rng, np.poly1d(z)(x_rng), color=colore, linewidth=2, linestyle="--")
 
@@ -183,6 +204,7 @@ def grafico_scatter_correlazione(blocchi, ax):
 
 
 def grafico_variabilita(blocchi, ax):
+    """Coefficiente di variazione (CV%) — misura la riproducibilità dei 10 test."""
     etichette = [f"{b['n_utenti']} utenti" for b in blocchi]
     cv_valori = []
 
@@ -195,6 +217,7 @@ def grafico_variabilita(blocchi, ax):
     bars = ax.bar(etichette, cv_valori,
                   color=COLORI[: len(blocchi)], alpha=0.85,
                   edgecolor="black", linewidth=0.8)
+
     for bar, cv in zip(bars, cv_valori):
         ax.text(bar.get_x() + bar.get_width() / 2,
                 bar.get_height() + 0.15,
@@ -203,6 +226,7 @@ def grafico_variabilita(blocchi, ax):
 
     ax.axhline(y=10, color="red", linestyle="--", linewidth=1.5,
                label="Soglia 10% (accettabile)")
+
     ax.set_title("Riproducibilità: Coefficiente di Variazione (CV%)", fontsize=12, fontweight="bold")
     ax.set_xlabel("Carico (N. Utenti)", fontsize=11)
     ax.set_ylabel("CV%  (σ / μ × 100)", fontsize=11)
@@ -217,7 +241,7 @@ def grafico_variabilita(blocchi, ax):
 
 def main():
     print("=" * 60)
-    print("  ANALISI AUTOMATICA CAMPAGNA — MICRO-SERVICE-DEMO")
+    print("  ANALISI AUTOMATICA CAMPAGNA DI TEST — TESI")
     print("=" * 60)
 
     OUTPUT_DIR.mkdir(exist_ok=True)
@@ -232,8 +256,9 @@ def main():
     n_test_totali = sum(len(b["metriche"]) for b in blocchi)
     print(f"\nTotale: {len(blocchi)} blocchi, {n_test_totali} test caricati.\n")
 
+    # ---- Figura 1: Box plot + Trend energia ----
     fig1, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
-    fig1.suptitle("Analisi Energetica — School/Student Microservices", fontsize=14, fontweight="bold")
+    fig1.suptitle("Analisi Energetica — PetClinic Microservices", fontsize=14, fontweight="bold")
     grafico_boxplot_energia(blocchi, ax1)
     grafico_trend_energia(blocchi, ax2)
     fig1.tight_layout()
@@ -242,8 +267,9 @@ def main():
     plt.close(fig1)
     print(f"Salvato: {out1.name}")
 
+    # ---- Figura 2: Costo J/ns + CV% ----
     fig2, (ax3, ax4) = plt.subplots(1, 2, figsize=(14, 6))
-    fig2.suptitle("Efficienza CPU e Riproducibilità — School/Student Microservices", fontsize=14, fontweight="bold")
+    fig2.suptitle("Efficienza CPU e Riproducibilità — PetClinic Microservices", fontsize=14, fontweight="bold")
     grafico_costo_nano(blocchi, ax3)
     grafico_variabilita(blocchi, ax4)
     fig2.tight_layout()
@@ -252,6 +278,7 @@ def main():
     plt.close(fig2)
     print(f"Salvato: {out2.name}")
 
+    # ---- Figura 3: Scatter correlazione (da solo, più grande) ----
     fig3, ax5 = plt.subplots(figsize=(10, 7))
     grafico_scatter_correlazione(blocchi, ax5)
     fig3.tight_layout()
@@ -260,6 +287,7 @@ def main():
     plt.close(fig3)
     print(f"Salvato: {out3.name}")
 
+    # ---- Report testuale ----
     print("\n--- REPORT STATISTICO ---")
     for b in blocchi:
         valori = [m["energia_totale_j"] for m in b["metriche"]]

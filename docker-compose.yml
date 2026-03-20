@@ -35,6 +35,10 @@ services:
   zipkin:
     container_name: zipkin
     image: openzipkin/zipkin
+    deploy:
+      resources:
+        limits:
+          memory: 2G
     ports:
       - "9411:9411"
     networks:
