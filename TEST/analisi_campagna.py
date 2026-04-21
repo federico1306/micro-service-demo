@@ -10,10 +10,13 @@ from pathlib import Path
 # ================================================================
 
 SCRIPT_DIR   = Path(__file__).parent
-RISULTATI_DIR = SCRIPT_DIR / "risultati"
+RISULTATI_DIRS = [
+    SCRIPT_DIR / "risultati1",  # Prima campagna (blocchi 1-5)
+    SCRIPT_DIR / "risultati2"   # Seconda campagna (blocco 5 con Zipkin fisso)
+]
 OUTPUT_DIR   = SCRIPT_DIR / "grafici_campagna"
 
-COLORI = ["#2196F3", "#FF9800", "#4CAF50"]   # blu, arancione, verde (un colore per blocco)
+COLORI = ["#2196F3", "#FF9800", "#4CAF50", "#9C27B0", "#F44336"]   # 5 colori per 5 blocchi
 
 
 # ================================================================
@@ -66,35 +69,55 @@ def leggi_metriche_test(test_dir):
 
 def carica_tutti_dati():
     """
-    Scansiona risultati/blocco_X_Yutenti/test_ZZ/ e restituisce lista di:
+    Scansiona tutte le directory in RISULTATI_DIRS e unisce i risultati.
+    Per blocchi con lo stesso numero di utenti, unisce i test.
+    Restituisce lista di:
       { n_utenti, nome, metriche: [{ energia_totale_j, costo_per_nano, span_data }] }
     """
-    if not RISULTATI_DIR.exists():
-        print(f"[!] Cartella risultati non trovata: {RISULTATI_DIR}")
-        return []
+    # Dizionario per aggregare blocchi con stesso numero di utenti
+    blocchi_map = {}
 
-    blocchi = []
-    for blocco_dir in sorted(RISULTATI_DIR.iterdir()):
-        if not blocco_dir.is_dir() or not blocco_dir.name.startswith("blocco_"):
+    for risultati_dir in RISULTATI_DIRS:
+        if not risultati_dir.exists():
+            print(f"[!] Cartella non trovata (salto): {risultati_dir}")
             continue
 
-        # Es. "blocco_1_10utenti" → 10
-        try:
-            n_utenti = int(blocco_dir.name.split("_")[-1].replace("utenti", ""))
-        except (ValueError, IndexError):
-            continue
+        print(f"\n  Scansione: {risultati_dir.name}/")
 
-        metriche = []
-        for test_dir in sorted(blocco_dir.iterdir()):
-            if not test_dir.is_dir() or not test_dir.name.startswith("test_"):
+        for blocco_dir in sorted(risultati_dir.iterdir()):
+            if not blocco_dir.is_dir() or not blocco_dir.name.startswith("blocco_"):
                 continue
-            m = leggi_metriche_test(test_dir)
-            if m is not None:
-                metriche.append(m)
 
-        if metriche:
-            blocchi.append({"n_utenti": n_utenti, "nome": blocco_dir.name, "metriche": metriche})
-            print(f"  {blocco_dir.name}: {len(metriche)} test caricati")
+            # Es. "blocco_1_10utenti" → 10
+            try:
+                n_utenti = int(blocco_dir.name.split("_")[-1].replace("utenti", ""))
+            except (ValueError, IndexError):
+                continue
+
+            # Carica i test di questo blocco
+            metriche_blocco = []
+            for test_dir in sorted(blocco_dir.iterdir()):
+                if not test_dir.is_dir() or not test_dir.name.startswith("test_"):
+                    continue
+                m = leggi_metriche_test(test_dir)
+                if m is not None:
+                    metriche_blocco.append(m)
+
+            if metriche_blocco:
+                # Se già esiste un blocco con questo numero di utenti, unisci i test
+                if n_utenti in blocchi_map:
+                    blocchi_map[n_utenti]["metriche"].extend(metriche_blocco)
+                    print(f"    {blocco_dir.name}: {len(metriche_blocco)} test aggiunti (totale: {len(blocchi_map[n_utenti]['metriche'])})")
+                else:
+                    blocchi_map[n_utenti] = {
+                        "n_utenti": n_utenti,
+                        "nome": blocco_dir.name,
+                        "metriche": metriche_blocco
+                    }
+                    print(f"    {blocco_dir.name}: {len(metriche_blocco)} test caricati")
+
+    # Converti dizionario in lista ordinata per numero di utenti
+    blocchi = [blocchi_map[k] for k in sorted(blocchi_map.keys())]
 
     return blocchi
 
@@ -242,23 +265,26 @@ def grafico_variabilita(blocchi, ax):
 def main():
     print("=" * 60)
     print("  ANALISI AUTOMATICA CAMPAGNA DI TEST — TESI")
+    print("  (Combinazione risultati1 + risultati2)")
     print("=" * 60)
 
     OUTPUT_DIR.mkdir(exist_ok=True)
 
-    print("\nCaricamento dati da risultati/ ...")
+    print("\nCaricamento dati da multiple campagne...")
     blocchi = carica_tutti_dati()
 
     if not blocchi:
-        print("\n[!] Nessun dato trovato. Esegui prima run_all_experiments.py.")
+        print("\n[!] Nessun dato trovato. Verifica le cartelle risultati1/ e risultati2/.")
         return
 
     n_test_totali = sum(len(b["metriche"]) for b in blocchi)
-    print(f"\nTotale: {len(blocchi)} blocchi, {n_test_totali} test caricati.\n")
+    print(f"\n{'='*60}")
+    print(f"Totale: {len(blocchi)} blocchi, {n_test_totali} test caricati.")
+    print(f"{'='*60}\n")
 
     # ---- Figura 1: Box plot + Trend energia ----
     fig1, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
-    fig1.suptitle("Analisi Energetica — PetClinic Microservices", fontsize=14, fontweight="bold")
+    fig1.suptitle("Analisi Energetica — Micro-Service-Demo (Campagna Completa)", fontsize=14, fontweight="bold")
     grafico_boxplot_energia(blocchi, ax1)
     grafico_trend_energia(blocchi, ax2)
     fig1.tight_layout()
@@ -269,7 +295,7 @@ def main():
 
     # ---- Figura 2: Costo J/ns + CV% ----
     fig2, (ax3, ax4) = plt.subplots(1, 2, figsize=(14, 6))
-    fig2.suptitle("Efficienza CPU e Riproducibilità — PetClinic Microservices", fontsize=14, fontweight="bold")
+    fig2.suptitle("Efficienza CPU e Riproducibilità — Micro-Service-Demo (Campagna Completa)", fontsize=14, fontweight="bold")
     grafico_costo_nano(blocchi, ax3)
     grafico_variabilita(blocchi, ax4)
     fig2.tight_layout()

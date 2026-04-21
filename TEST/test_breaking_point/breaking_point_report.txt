@@ -1,0 +1,17 @@
+RICERCA BREAKING POINT - MICROSERVICE DEMO
+Data: 2026-04-08 01:24:01
+======================================================================
+
+RISULTATO: Massimale stabile a 50 utenti
+Errori al massimale: 100.00%
+Latenza P95 al massimale: 22ms
+Latenza P99 al massimale: 49ms
+Numero blocchi testati: 1
+
+Soglie utilizzate:
+  - WARNING ERRORI (>= 50%): Sistema inizia a degradarsi
+  - CRITICO ERRORI (>= 80%): Sistema satura (errori)
+  - CRASH ERRORI (>= 95%): Interruzione test
+  - CRASH LATENZA (P95 > 5000ms): Interruzione test (system saturation)
+
+Dettagli blocchi:

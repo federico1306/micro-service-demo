@@ -1,0 +1,172 @@
+[
+  {
+    "utenti": 100,
+    "n_test": 1,
+    "tasso_errori_avg": 0.0,
+    "tempo_medio_avg": 12.637065523720056,
+    "p95_avg": 29.0,
+    "p99_avg": 39.0,
+    "zipkin_crashes": 0,
+    "timestamp": "2026-04-08T12:21:02.544261"
+  },
+  {
+    "utenti": 110,
+    "n_test": 1,
+    "tasso_errori_avg": 0.0,
+    "tempo_medio_avg": 13.443336452345942,
+    "p95_avg": 31.0,
+    "p99_avg": 46.0,
+    "zipkin_crashes": 0,
+    "timestamp": "2026-04-08T12:25:15.552436"
+  },
+  {
+    "utenti": 120,
+    "n_test": 1,
+    "tasso_errori_avg": 0.0,
+    "tempo_medio_avg": 12.366375834005426,
+    "p95_avg": 30.0,
+    "p99_avg": 44.0,
+    "zipkin_crashes": 0,
+    "timestamp": "2026-04-08T12:29:29.286616"
+  },
+  {
+    "utenti": 130,
+    "n_test": 1,
+    "tasso_errori_avg": 0.0,
+    "tempo_medio_avg": 13.213452671548685,
+    "p95_avg": 32.0,
+    "p99_avg": 44.0,
+    "zipkin_crashes": 0,
+    "timestamp": "2026-04-08T12:33:42.081862"
+  },
+  {
+    "utenti": 140,
+    "n_test": 1,
+    "tasso_errori_avg": 0.0,
+    "tempo_medio_avg": 13.824644749012023,
+    "p95_avg": 33.0,
+    "p99_avg": 45.0,
+    "zipkin_crashes": 0,
+    "timestamp": "2026-04-08T12:37:55.160678"
+  },
+  {
+    "utenti": 150,
+    "n_test": 1,
+    "tasso_errori_avg": 0.0,
+    "tempo_medio_avg": 13.357369472406095,
+    "p95_avg": 33.0,
+    "p99_avg": 46.0,
+    "zipkin_crashes": 0,
+    "timestamp": "2026-04-08T12:42:08.733015"
+  },
+  {
+    "utenti": 160,
+    "n_test": 1,
+    "tasso_errori_avg": 0.0,
+    "tempo_medio_avg": 14.404540934703348,
+    "p95_avg": 34.0,
+    "p99_avg": 49.0,
+    "zipkin_crashes": 0,
+    "timestamp": "2026-04-08T12:46:21.686126"
+  },
+  {
+    "utenti": 170,
+    "n_test": 1,
+    "tasso_errori_avg": 0.0,
+    "tempo_medio_avg": 14.445219951506754,
+    "p95_avg": 35.0,
+    "p99_avg": 50.0,
+    "zipkin_crashes": 0,
+    "timestamp": "2026-04-08T12:50:34.818485"
+  },
+  {
+    "utenti": 180,
+    "n_test": 1,
+    "tasso_errori_avg": 0.0,
+    "tempo_medio_avg": 14.58061927919962,
+    "p95_avg": 36.0,
+    "p99_avg": 53.0,
+    "zipkin_crashes": 0,
+    "timestamp": "2026-04-08T12:54:48.352075"
+  },
+  {
+    "utenti": 190,
+    "n_test": 1,
+    "tasso_errori_avg": 0.0,
+    "tempo_medio_avg": 15.059470784511523,
+    "p95_avg": 35.0,
+    "p99_avg": 50.0,
+    "zipkin_crashes": 0,
+    "timestamp": "2026-04-08T12:59:01.774793"
+  },
+  {
+    "utenti": 200,
+    "n_test": 1,
+    "tasso_errori_avg": 0.0,
+    "tempo_medio_avg": 15.635530297438926,
+    "p95_avg": 37.0,
+    "p99_avg": 51.0,
+    "zipkin_crashes": 0,
+    "timestamp": "2026-04-08T13:03:14.830723"
+  },
+  {
+    "utenti": 210,
+    "n_test": 1,
+    "tasso_errori_avg": 0.0,
+    "tempo_medio_avg": 15.712991998650036,
+    "p95_avg": 37.0,
+    "p99_avg": 51.0,
+    "zipkin_crashes": 0,
+    "timestamp": "2026-04-08T13:07:28.331768"
+  },
+  {
+    "utenti": 220,
+    "n_test": 1,
+    "tasso_errori_avg": 0.0,
+    "tempo_medio_avg": 17.01352497072954,
+    "p95_avg": 40.0,
+    "p99_avg": 56.0,
+    "zipkin_crashes": 0,
+    "timestamp": "2026-04-08T13:11:42.224079"
+  },
+  {
+    "utenti": 230,
+    "n_test": 1,
+    "tasso_errori_avg": 0.0,
+    "tempo_medio_avg": 17.041742871126452,
+    "p95_avg": 39.0,
+    "p99_avg": 57.0,
+    "zipkin_crashes": 0,
+    "timestamp": "2026-04-08T13:15:55.545221"
+  },
+  {
+    "utenti": 240,
+    "n_test": 1,
+    "tasso_errori_avg": 0.0,
+    "tempo_medio_avg": 16.577747806827603,
+    "p95_avg": 41.0,
+    "p99_avg": 66.0,
+    "zipkin_crashes": 0,
+    "timestamp": "2026-04-08T13:20:14.924792"
+  },
+  {
+    "utenti": 250,
+    "n_test": 1,
+    "tasso_errori_avg": 0.0,
+    "tempo_medio_avg": 17.116008291382883,
+    "p95_avg": 40.0,
+    "p99_avg": 56.0,
+    "zipkin_crashes": 0,
+    "timestamp": "2026-04-08T13:24:47.648235"
+  },
+  {
+    "utenti": 260,
+    "n_test": 1,
+    "tasso_errori_avg": 0.0,
+    "tempo_medio_avg": 16.811791615458144,
+    "p95_avg": 39.0,
+    "p99_avg": 52.0,
+    "zipkin_crashes": 0,
+    "timestamp": "2026-04-08T13:29:01.832377"
+  }
+]

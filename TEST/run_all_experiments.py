@@ -8,14 +8,14 @@ from datetime import datetime
 # CONFIGURAZIONE CAMPAGNA DI TEST
 # ================================================================
 
-BLOCCHI_UTENTI       = [10, 17, 25, 32, 40]   # N. thread JMeter per ogni blocco
+BLOCCHI_UTENTI       = [50,62,75,87,100]   # N. thread JMeter per ogni blocco
 N_TEST_PER_BLOCCO    = 10             # Quante ripetizioni per blocco
 DURATA_TEST_SECONDI  = 300            # Durata di ogni test (5 minuti)
 PAUSA_TRA_TEST_S     = 60             # Pausa tra un test e il successivo (1 min)
-PAUSA_TRA_BLOCCHI_S  = 150            # Pausa tra un blocco e il successivo (5 min)
+PAUSA_TRA_BLOCCHI_S  = 300            # Pausa tra un blocco e il successivo (5 min)
 
 JMETER_BIN = r"C:\apache-jmeter-5.6.3\bin\jmeter.bat"
-FILE_JMX   = r"C:\Users\berar\Documents\micro-service-demo\stress_test_auto.jmx"
+FILE_JMX   = r"C:\Users\berar\Documents\micro-service-demo\stress_test_realistic.jmx"
 
 # Cartella dove si trovano gli script Python (questa stessa cartella)
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
